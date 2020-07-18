@@ -1,0 +1,182 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="https://bootswatch.com/4/lumen/bootstrap.min.css"/>
+	
+		<style>
+			
+		</style>
+	</head>
+	
+	
+	<body>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12 jumbotron">
+					<br/>
+					<form id="form-book">
+					<h3 id="heading"></h3>
+					<label for="title">Title</label>
+					<input type="text" class="form-control" id="title" placeholder="Title">
+					<br />
+					<label for="isbn">Author</label>
+					<input type="text" class="form-control" id="author" placeholder="Author">
+					<br />
+					<label for="isbn">Isbn</label>
+					<input type="text" class="form-control" id="isbn" placeholder="Isbn">
+					<br/>
+					<button class="btn btn-danger btn-block" id="btn">Submit</button>
+					</form>
+				</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12">
+						<table class="table table-striped">
+							<thead>
+								<tr>
+								<td>Title</td>
+								<td>Author</td>
+								<td>Isbn</td>
+								<td>Delete</td>
+								</tr>
+							</thead>
+							<tbody id="list-book">
+							
+							</tbody>
+						</table>
+					</div>
+				</div>
+			
+		</div>
+		
+		<script>
+			
+			let btn = document.getElementById('btn');
+			let heading = document.getElementById('heading');
+			
+			class Store{
+				static getBook(){
+					let books; 
+					if(localStorage.getItem('books') === null){
+						books = [];
+					}else{
+						books = JSON.parse(localStorage.getItem('books'))
+					}
+					return books;
+				}
+				
+				static addBook(book){
+					const books = Store.getBook();
+					books.push(book);
+					localStorage.setItem('books', JSON.stringify(books))
+				}
+				
+				static removeBook(isbn){
+					const books = Store.getBook();
+					
+					books.forEach((book, index)=>{
+						if(book.isbn == isbn){
+							books.splice(index, 1)
+						}
+					})
+					
+					localStorage.setItem('books', JSON.stringify(books))
+				}
+			}
+			
+			
+			class Book{
+				constructor(title, author, isbn){
+				this.title = title;
+				this.author = author;
+				this.isbn = isbn
+				}
+			}
+			
+			class UI{
+				static displayBooks(){
+				
+					const books = Store.getBook();
+					
+					books.forEach((book)=>{
+						UI.addBookToList(book)
+					})
+				}
+				
+				static addBookToList(book){
+					let list  = document.querySelector('#list-book')
+					let row = document.createElement('tr');
+					
+					row.innerHTML = `<td>${book.title}</td>
+							<td>${book.author}</td>
+							<td>${book.isbn}</td>
+							<td><button class="btn btn-danger delete">X</button></td>`
+						
+						list.appendChild(row);
+					
+				}
+				
+				static validate(message, classname){
+					const div = document.createElement('div');
+					div.className = `alert alert-${classname}`;
+					div.appendChild(document.createTextNode(message));
+					
+					let container = document.querySelector('.container');
+					let row = document.querySelector('.row');
+					
+					container.insertBefore(div, row)
+					
+					setTimeout(()=>document.querySelector('.alert').remove(), 3000)
+				}
+				static clearFields(){
+					document.getElementById('author').value= '';
+					document.getElementById('title').value = '';
+					document.getElementById('isbn').value = '';
+				}
+				
+				static delete(el){
+					if(el.classList.contains('delete')){
+						el.parentElement.parentElement.remove();
+						UI.validate('successfully removed', 'warning')
+					}
+				}
+				
+			}
+		
+		document.addEventListener('DOMContentLoaded', UI.displayBooks)
+			
+			document.getElementById('form-book').addEventListener('submit', (e)=>{
+					e.preventDefault();
+			
+					let author = document.getElementById('author').value;
+					let title = document.getElementById('title').value;
+					let isbn = document.getElementById('isbn').value;
+					
+					if(author == '' || title == '' || isbn == ''){
+						let message = 'Please fill all the fields';
+						let danger = 'danger'
+						UI.validate(message, danger)
+					}
+					else{
+					
+					const book1 = new Book(title, author, isbn )
+					UI.addBookToList(book1)
+					
+					UI.clearFields();
+					
+						Store.addBook(book1)
+					
+						UI.validate('Successfully added', 'success')
+					console.log(book1)
+					}
+					
+			})
+			
+			document.getElementById('list-book').addEventListener('click', (e)=>{
+				console.log(e.target)
+				Store.removeBook(e.target.parentElement.previousElementSibling.textContent)
+				UI.delete(e.target)
+			})
+		</script>
+	</body>
+</html>
